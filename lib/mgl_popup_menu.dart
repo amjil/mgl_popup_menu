@@ -46,29 +46,28 @@ class MongolPopupMenuButton extends StatelessWidget {
   void _showMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject()! as RenderBox;
     final RenderBox overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-
-    // Button's global offset relative to the Overlay
     final Offset buttonOffset = button.localToGlobal(Offset.zero, ancestor: overlay);
     final Size buttonSize = button.size;
     final Size screenSize = overlay.size;
 
-    // Calculate menu position, preferably below the button
+    // Preferred position: below the button
     double left = buttonOffset.dx;
     double top = buttonOffset.dy + buttonSize.height;
 
-    // Estimated menu width and height (can be dynamically calculated)
+    // Estimated menu size
     const double menuWidth = 300;
     const double menuHeight = 250;
 
-    // Adjust left position if menu overflows the right edge of the screen
+    // Adjust horizontal position if menu overflows right edge
     if (left + menuWidth > screenSize.width) {
-      left = screenSize.width - menuWidth - 10; // 10 is margin
+      left = screenSize.width - menuWidth - 10; // 10px margin
+      if (left < 10) left = 10; // prevent overflow left
     }
 
-    // Adjust top position if menu overflows the bottom edge of the screen, show above button
+    // Adjust vertical position if menu overflows bottom edge
     if (top + menuHeight > screenSize.height) {
       top = buttonOffset.dy - menuHeight;
-      if (top < 0) top = 10; // top margin
+      if (top < 10) top = 10; // top margin
     }
 
     showGeneralDialog(
@@ -104,8 +103,6 @@ class MongolPopupMenuButton extends StatelessWidget {
       },
     );
   }
-
-
 }
 
 class _PopupContent extends StatelessWidget {
@@ -120,8 +117,16 @@ class _PopupContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final backgroundColor = isDark ? Colors.grey[900] : Colors.white;
+    final dividerColor = isDark ? Colors.grey[700] : Colors.grey[300];
+    final textColor = isDark ? Colors.white70 : Colors.black87;
+    final groupTitleColor = isDark ? Colors.white54 : Colors.black54;
+    final iconColor = isDark ? Colors.white70 : Colors.black54;
+
     return Material(
-      color: theme.cardColor,
+      color: backgroundColor,
       borderRadius: BorderRadius.circular(12),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300, minWidth: 80),
@@ -135,7 +140,7 @@ class _PopupContent extends StatelessWidget {
                   return VerticalDivider(
                     width: 1,
                     thickness: 1,
-                    color: theme.dividerColor,
+                    color: dividerColor,
                   );
                 } else if (item.isGroupTitle) {
                   return Padding(
@@ -143,9 +148,9 @@ class _PopupContent extends StatelessWidget {
                     child: Center(
                       child: MongolText(
                         item.label,
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+                          color: groupTitleColor,
                         ),
                       ),
                     ),
@@ -156,21 +161,21 @@ class _PopupContent extends StatelessWidget {
                       Navigator.of(context).pop();
                       onItemSelected(item);
                     },
-                    onHover: (hovering) {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: item.customWidget ?? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (item.icon != null)
-                            Icon(item.icon, size: 24),
-                          const SizedBox(height: 4),
-                          MongolText(
-                            item.label,
-                            style: theme.textTheme.bodySmall,
+                      child: item.customWidget ??
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (item.icon != null)
+                                Icon(item.icon, size: 24, color: iconColor),
+                              const SizedBox(height: 4),
+                              MongolText(
+                                item.label,
+                                style: TextStyle(color: textColor),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
                     ),
                   );
                 }
