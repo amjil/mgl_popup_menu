@@ -27,12 +27,24 @@ class MongolPopupMenuButton extends StatelessWidget {
   final List<MongolMenuItem> items;
   final Widget? icon;
   final void Function(MongolMenuItem)? onSelected;
+  final Color? menuBackgroundColor;
+  final double menuBorderRadius;
+  final List<BoxShadow>? menuBoxShadow;
+  final Color? dividerColor;
+  final EdgeInsetsGeometry menuItemPadding;
+  final double iconSize;
 
   const MongolPopupMenuButton({
     super.key,
     required this.items,
     this.icon,
     this.onSelected,
+    this.menuBackgroundColor,
+    this.menuBorderRadius = 12,
+    this.menuBoxShadow,
+    this.dividerColor,
+    this.menuItemPadding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.iconSize = 24,
   });
 
   @override
@@ -89,6 +101,12 @@ class MongolPopupMenuButton extends StatelessWidget {
                   item.onSelected?.call();
                   onSelected?.call(item);
                 },
+                backgroundColor: menuBackgroundColor,
+                borderRadius: menuBorderRadius,
+                boxShadow: menuBoxShadow,
+                dividerColor: dividerColor,
+                menuItemPadding: menuItemPadding,
+                iconSize: iconSize,
               ),
             ),
           ],
@@ -108,10 +126,22 @@ class MongolPopupMenuButton extends StatelessWidget {
 class _PopupContent extends StatelessWidget {
   final List<MongolMenuItem> items;
   final void Function(MongolMenuItem item) onItemSelected;
+  final Color? backgroundColor;
+  final double borderRadius;
+  final List<BoxShadow>? boxShadow;
+  final Color? dividerColor;
+  final EdgeInsetsGeometry menuItemPadding;
+  final double iconSize;
 
   const _PopupContent({
     required this.items,
     required this.onItemSelected,
+    this.backgroundColor,
+    this.borderRadius = 12,
+    this.boxShadow,
+    this.dividerColor,
+    this.menuItemPadding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.iconSize = 24,
   });
 
   @override
@@ -119,67 +149,75 @@ class _PopupContent extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final backgroundColor = isDark ? Colors.grey[900] : Colors.white;
-    final dividerColor = isDark ? Colors.grey[700] : Colors.grey[300];
+    final bgColor = backgroundColor ?? (isDark ? Colors.grey[900] : Colors.white);
+    final divColor = dividerColor ?? (isDark ? Colors.grey[700] : Colors.grey[300]);
     final textColor = isDark ? Colors.white70 : Colors.black87;
     final groupTitleColor = isDark ? Colors.white54 : Colors.black54;
     final iconColor = isDark ? Colors.white70 : Colors.black54;
 
     return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(12),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 300, minWidth: 80),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: items.map((item) {
-                if (item.isDivider) {
-                  return VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    color: dividerColor,
-                  );
-                } else if (item.isGroupTitle) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Center(
-                      child: MongolText(
-                        item.label,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: groupTitleColor,
+      color: bgColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      elevation: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(borderRadius),
+          boxShadow: boxShadow,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 300, minWidth: 80),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: items.map((item) {
+                  if (item.isDivider) {
+                    return VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: divColor,
+                    );
+                  } else if (item.isGroupTitle) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Center(
+                        child: MongolText(
+                          item.label,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: groupTitleColor,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                } else {
-                  return InkWell(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onItemSelected(item);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: item.customWidget ??
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (item.icon != null)
-                                Icon(item.icon, size: 24, color: iconColor),
-                              const SizedBox(height: 4),
-                              MongolText(
-                                item.label,
-                                style: TextStyle(color: textColor),
-                              ),
-                            ],
-                          ),
-                    ),
-                  );
-                }
-              }).toList(),
+                    );
+                  } else {
+                    return InkWell(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onItemSelected(item);
+                      },
+                      child: Container(
+                        padding: menuItemPadding,
+                        child: item.customWidget ??
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (item.icon != null)
+                                  Icon(item.icon, size: iconSize, color: iconColor),
+                                const SizedBox(height: 4),
+                                MongolText(
+                                  item.label,
+                                  style: TextStyle(color: textColor),
+                                ),
+                              ],
+                            ),
+                      ),
+                    );
+                  }
+                }).toList(),
+              ),
             ),
           ),
         ),
